@@ -63,19 +63,18 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private DrawerLayout mDrawerLayout;
     private View videoBox;
-    private View mainContent;
+    private CoordinatorLayout mainContent;
     private VideoFragment videoFragment;
     private AppBarLayout appBarLayout;
 
     private boolean isFullScreen = false;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
-        mainContent = findViewById(R.id.main_content);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -85,6 +84,10 @@ public class MainActivity extends AppCompatActivity {
         ab.setDisplayHomeAsUpEnabled(true);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+//        mDrawerLayout.setFitsSystemWindows(false);
+
+        mainContent = (CoordinatorLayout) findViewById(R.id.main_content);
+//        mainContent.setTranslationY(getStatusBarHeight());
 
         appBarLayout = (AppBarLayout) findViewById(R.id.appbar);
 
@@ -98,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
             setupDrawerContent(navigationView);
         }
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager = (ViewPager) findViewById(R.id.viewpager);
         if (viewPager != null) {
             setupViewPager(viewPager);
         }
@@ -116,7 +119,17 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
-//        showSystemUI();
+        showSystemUI();
+//        hideSystemUI();
+    }
+
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 
     @Override
@@ -174,12 +187,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupViewPager(ViewPager viewPager) {
+    private void setupViewPager(final ViewPager viewPager) {
         Adapter adapter = new Adapter(getSupportFragmentManager());
         adapter.addFragment(new CheeseListFragment(), "Category 1");
         adapter.addFragment(new CheeseListFragment(), "Category 2");
         adapter.addFragment(new CheeseListFragment(), "Category 3");
         viewPager.setAdapter(adapter);
+
+        viewPager.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View view, int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7) {
+//                Log.d(TAG, "height = " + view.getHeight());
+//                Log.d(TAG, "status height = " + getStatusBarHeight());
+//                setLayoutSize(viewPager, MATCH_PARENT, view.getHeight() - getStatusBarHeight());
+//                setLayoutSize(viewPager, MATCH_PARENT, MATCH_PARENT);
+            }
+        });
     }
 
     private void setupDrawerContent(NavigationView navigationView) {
@@ -239,11 +262,12 @@ public class MainActivity extends AppCompatActivity {
     private void layout() {
         boolean isPortrait = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
 
-        int screenWidth = dpToPx(getResources().getConfiguration().screenWidthDp);
-        int screenHeight = dpToPx(getResources().getConfiguration().screenHeightDp);
+//        int screenWidth = dpToPx(getResources().getConfiguration().screenWidthDp);
+//        int screenHeight = dpToPx(getResources().getConfiguration().screenHeightDp);
+//        Log.d(TAG, "screenWidth = " + screenWidth + ", screenHeight = " + screenHeight);
 
         if (isFullScreen) {
-//            mDrawerLayout.setFitsSystemWindows(false);
+//            mainContent.setTranslationY(0);
 
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
@@ -251,11 +275,11 @@ public class MainActivity extends AppCompatActivity {
             appBarLayout.setVisibility(View.GONE);
             videoBox.setTranslationY(0);
             videoBox.setVisibility(View.VISIBLE);
+//            setFrameLayoutSize(mDrawerLayout, MATCH_PARENT, MATCH_PARENT);
+            setLayoutSizeAndGravity(videoBox, MATCH_PARENT, MATCH_PARENT, Gravity.TOP | Gravity.START);
             setLayoutSize(videoFragment.getView(), MATCH_PARENT, MATCH_PARENT);
-            setLayoutSizeAndGravity(videoBox, MATCH_PARENT, MATCH_PARENT, Gravity.TOP | Gravity.LEFT);
-
         } else {
-//            mDrawerLayout.setFitsSystemWindows(true);
+//            mainContent.setTranslationY(getStatusBarHeight());
 
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
@@ -323,7 +347,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         getWindow().getDecorView().setSystemUiVisibility(newUiOptions);
-
     }
 
     // This snippet hides the system bars.
@@ -338,6 +361,8 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
                         | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
                         | View.SYSTEM_UI_FLAG_IMMERSIVE);
+
+//        mDrawerLayout.setFitsSystemWindows(false);
     }
 
     // This snippet shows the system bars. It does this by removing all the flags
@@ -347,7 +372,23 @@ public class MainActivity extends AppCompatActivity {
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
+//        mDrawerLayout.setFitsSystemWindows(true);
     }
+
+//    @Override
+//    public void onWindowFocusChanged(boolean hasFocus) {
+//        super.onWindowFocusChanged(hasFocus);
+//        if (hasFocus) {
+//            getWindow().getDecorView().setSystemUiVisibility(
+//                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+//                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+//        }
+//    }
 
     private int dpToPx(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
@@ -355,6 +396,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static void setLayoutSize(View view, int width, int height) {
         ViewGroup.LayoutParams params = view.getLayoutParams();
+        params.width = width;
+        params.height = height;
+        view.setLayoutParams(params);
+    }
+
+    private static void setCoordinatorLayoutSize(View view, int width, int height) {
+        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) view.getLayoutParams();
         params.width = width;
         params.height = height;
         view.setLayoutParams(params);
@@ -370,6 +418,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static void setDrawerLayoutSize(View view, int width, int height) {
         DrawerLayout.LayoutParams params = (DrawerLayout.LayoutParams) view.getLayoutParams();
+        params.width = width;
+        params.height = height;
+        view.setLayoutParams(params);
+    }
+
+    private static void setFrameLayoutSize(View view, int width, int height) {
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
         params.width = width;
         params.height = height;
         view.setLayoutParams(params);
